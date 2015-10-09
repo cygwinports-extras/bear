@@ -1,0 +1,15 @@
+inherit cmake
+
+NAME="bear"
+VERSION=2.1.2
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="Generates a JSON compilation database"
+DESCRIPTION="Bear is a tool that generates a compilation database for clang
+tooling. The JSON compilation database is used in the clang project to provide
+information on how a single compilation unit is processed. With this, it is easy
+to re-run the compilation with alternate programs."
+HOMEPAGE="https://github.com/rizsotto/Bear"
+SRC_URI="https://github.com/rizsotto/Bear/archive/${VERSION}/Bear-${VERSION}.tar.gz"
+SRC_DIR="Bear-${VERSION}"
+PATCH_URI="2.1.2-cygwin.patch"

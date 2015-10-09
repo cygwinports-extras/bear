@@ -1,0 +1,51 @@
+--- origsrc/Bear-2.1.2/libear/CMakeLists.txt	2015-10-01 11:54:01.000000000 -0500
++++ src/Bear-2.1.2/libear/CMakeLists.txt	2015-10-09 14:34:38.666272100 -0500
+@@ -19,7 +19,7 @@ find_package(Threads REQUIRED)
+ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+ 
+-add_library(ear SHARED ear.c)
++add_library(ear MODULE ear.c)
+ target_link_libraries(ear ${CMAKE_DL_LIBS})
+ if(THREADS_HAVE_PTHREAD_ARG)
+     set_property(TARGET ear PROPERTY COMPILE_OPTIONS "-pthread")
+--- origsrc/Bear-2.1.2/libear/ear.c	2015-10-01 11:54:01.000000000 -0500
++++ src/Bear-2.1.2/libear/ear.c	2015-10-09 14:36:52.994829600 -0500
+@@ -63,11 +63,18 @@ extern char **environ;
+ # define ENV_SIZE 2
+ #endif
+ 
++#ifdef __CYGWIN__
++#include <sys/cygwin.h>
++void *RTLD_NEXT = NULL;
++#endif
++
+ #define DLSYM(TYPE_, VAR_, SYMBOL_)                                            \
+     union {                                                                    \
+         void *from;                                                            \
+         TYPE_ to;                                                              \
+     } cast;                                                                    \
++    if (!RTLD_NEXT)                                                            \
++        RTLD_NEXT = dlopen("cygwin1.dll", 0);                                  \
+     if (0 == (cast.from = dlsym(RTLD_NEXT, SYMBOL_))) {                        \
+         perror("bear: dlsym");                                                 \
+         exit(EXIT_FAILURE);                                                    \
+@@ -570,3 +577,18 @@ static void bear_strings_release(char co
+     }
+     free((void *)in);
+ }
++
++#ifdef __CYGWIN__
++__attribute__((constructor))
++void _init(void) {
++    cygwin_internal(CW_HOOK, "execl", execl);
++    cygwin_internal(CW_HOOK, "execle", execle);
++    cygwin_internal(CW_HOOK, "execlp", execlp);
++    cygwin_internal(CW_HOOK, "execv", execv);
++    cygwin_internal(CW_HOOK, "execve", execve);
++    cygwin_internal(CW_HOOK, "execvp", execvp);
++    cygwin_internal(CW_HOOK, "execvpe", execvpe);
++    cygwin_internal(CW_HOOK, "posix_spawn", posix_spawn);
++    cygwin_internal(CW_HOOK, "posix_spawnp", posix_spawnp);
++}
++#endif
